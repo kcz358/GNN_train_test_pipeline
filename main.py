@@ -65,6 +65,7 @@ def load_dataset(dataset_name):
 if __name__ == "__main__":
     torch.manual_seed(42)
     parsed_args = parse_arguments()
+    device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
     # Access the parsed arguments
     dataset_name = parsed_args.dataset_name
@@ -107,6 +108,9 @@ if __name__ == "__main__":
         dataset_class = load_dataset(dataset_name)
         dataset_class = partial(dataset_class, **additional_dataset_parameters)
         dataset = dataset_class(root = root)
+        dataset.x = dataset.x.to(device)
+        dataset.edge_index = dataset.edge_index.to(device)
+        dataset.y = dataset.y.to(device)
     except:
         raise RuntimeError("Oops, Looks like the dataset isn't in the torchgeometric dataset class or you enter the wrong config")
     
@@ -116,6 +120,8 @@ if __name__ == "__main__":
                          out_channels=dataset.num_classes,
                          hid_dim=hid_dim,
                          additional_parameters=additional_model_parameters)
+    model = model.float()
+    model = model.to(device)
     
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     criterion = torch.nn.CrossEntropyLoss()
