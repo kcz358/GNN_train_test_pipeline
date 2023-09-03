@@ -6,40 +6,36 @@ import torch_geometric.nn as geo_nn
 
 class GNNAutoModel(nn.Module):
     def __init__(self, 
-                 message_layer, 
-                 num_layers, 
-                 in_channels, 
-                 out_channels, 
-                 hid_dim,
-                 additional_parameters = {}) -> None:
+                 in_channels,
+                 out_channels,
+                 model_arch) -> None:
         super().__init__()
-        assert num_layers >= 1
-        try:
-            #Creating dynamic loading class and its additional parameters
-            layer_class = self.load_message_layer(message_layer=message_layer)
-            layer_class = partial(layer_class, **additional_parameters)
-        except:
-            raise RuntimeError("Looks like the given conv layer does not exist in torch_geometric")
+        assert len(model_arch) >= 1
         
         self.layers = nn.ModuleList([])
-        #First layer of the model
-        self.layers.append(
-            layer_class(in_channels = in_channels,
-                        out_channels = hid_dim)
-        )
-        
-        #Intermediate layer of the model
-        for i in range(1, num_layers - 1):
-            self.layers.append(
-                layer_class(in_channels = hid_dim,
-                            out_channels = hid_dim)
-            )
-        
-        #Manually append the last layer of the model
-        self.layers.append(
-            layer_class(in_channels = hid_dim,
-                        out_channels = out_channels)
-        )
+        for layer in model_arch:
+            try:
+                #Creating dynamic loading class and its additional parameters
+                layer_class = self.load_message_layer(message_layer=layer["name"])
+                
+                #The name and the layer id can be reserved in the file
+                #I choose to pop out because I think it would be better to read out the config
+                layer.pop("name")
+                
+                #If it is the first or the last layer of the model
+                #We fix the in channels or the out channels of it
+                if(layer['layer_id'] == 1):
+                    layer['in_channels'] = in_channels
+                elif(layer['layer_id'] == len(model_arch)):
+                    layer['out_channels'] = out_channels
+                
+                layer.pop("layer_id")
+                layer_class = partial(layer_class, **layer)
+                #print(layer)
+                
+                self.layers.append(layer_class())
+            except:
+                raise RuntimeError("Looks like the given conv layer config is not correct")
         
     
     @staticmethod 
@@ -55,10 +51,11 @@ class GNNAutoModel(nn.Module):
         return x
 
 if __name__ == "__main__":
-    model = GNNAutoModel(message_layer="SAGEConv", 
-                         num_layers=5, 
+    import json
+    with open("./config.json", "r") as config_file:
+        config = json.load(config_file)
+    model = GNNAutoModel(
                          in_channels=10, 
                          out_channels=10, 
-                         hid_dim=5,
-                         additional_parameters={"aggr" : "lstm"})
+                         model_arch=config['model'])
     print(model)
