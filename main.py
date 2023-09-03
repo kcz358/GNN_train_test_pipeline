@@ -20,16 +20,11 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Argument parser for your program")
 
     # Dataset related arguments
-    parser.add_argument("--dataset_name", type=str, required=True, help="Name of the dataset used for training")
     parser.add_argument("--root", type=str, required=True, help="Root directory where the dataset will be stored")
     parser.add_argument("--out_dir", type=str, required=True, help="Output directory of the model")
     parser.add_argument("--tf_log", type=str, required=True, help="Output Directory to store tensorboard path file")
-    parser.add_argument("--additional_dataset_parameters", type=str, default="{}", help="Additional dataset parameters in JSON format")
 
     args = parser.parse_args()
-
-    # Convert JSON strings to dictionaries
-    args.additional_dataset_parameters = eval(args.additional_dataset_parameters)
 
     return args
 
@@ -59,13 +54,19 @@ if __name__ == "__main__":
     torch.manual_seed(42)
     parsed_args = parse_arguments()
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-
+    config_file_path = "./config.json"  # Replace with the actual path to your config file
+    config = load_config(config_file_path)
+    
     # Access the parsed arguments
-    dataset_name = parsed_args.dataset_name
+    dataset = config['dataset']
+    dataset_name = dataset['dataset_name']
+    #Popping out the dataset key and preserve other keys
+    dataset.pop("dataset_name")
+    
     root = parsed_args.root
     out_dir = parsed_args.out_dir
     tf_log = parsed_args.tf_log
-    additional_dataset_parameters = parsed_args.additional_dataset_parameters
+    additional_dataset_parameters = dataset
 
     print("============================")
     # Now you can use these arguments in your program
@@ -75,8 +76,7 @@ if __name__ == "__main__":
     print("tensorboard logging Directory : ", tf_log)
     print("Additional Dataset Parameters : ", additional_dataset_parameters)
     
-    config_file_path = "./config.json"  # Replace with the actual path to your config file
-    config = load_config(config_file_path)
+
     
     training_params = config["training"]
     learning_rate = training_params["learning_rate"]
