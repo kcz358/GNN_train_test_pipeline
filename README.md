@@ -3,19 +3,50 @@ A simple GNN training and testing node classification pipeline using torchgeomet
 
 # Usage
 
-To start training the model, you can use
+To start training the model, you should first prepare you json config file.
+
+An example could be like this : 
+
+```
+{
+    "training": {
+        "learning_rate": 0.001,
+        "epochs": 50,
+        "weight_decay": 0.0005
+    },
+
+    "model" : [
+        {
+            "layer_id" : 1,
+            "name" : "GATConv",
+            "heads" : 8,
+            "out_channels" : 8
+        },
+
+        {
+            "layer_id" : 2,
+            "name" : "GATConv",
+            "heads" : 1,
+            "concat" : false,
+            "in_channels" : 64
+        }
+    ],
+
+    "dataset" : {
+        "dataset_name" : "Planetoid",
+        "root" : "./datasets",
+        "name" : "Cora"
+    }
+}
+```
+
+Then you can start to train the model using
 
 ```
 python main.py \
-        --dataset_name=Planetoid \
         --root=./datasets \
         --out_dir=./checkpoints \
         --tf_log=./tf_log \
-        --message_layer=GATConv \
-        --num_layers=2 \
-        --hid_dim=16 \
-        --additional_dataset_parameters="{'name' : 'Cora'}"\
-        --additional_model_parameters="{'head' : 8}"
 ```
 
-This would start to train a GNN neural network with 2 GAT conv layers and 16 hidden dimension that do node classification on the dataset Planetoid Cora.
+This would start to train the GAT model using the Planetoid dataset
