@@ -34,7 +34,6 @@ An example could be like this :
 
     "dataset" : {
         "dataset_name" : "Planetoid",
-        "root" : "./datasets",
         "name" : "Cora"
     }
 }
