@@ -44,9 +44,10 @@ class GNNAutoModel(nn.Module):
         return layer_class
     
     def forward(self, x, edge_index):
-        for layer in self.layers:
-            x = layer(x, edge_index)
-            x = F.relu(x)
+        for layer in range(len(self.layers)):
+            x = self.layers[layer](x, edge_index)
+            if layer < len(self.layers) - 1:
+                x = F.relu(x)
         
         return x
 
