@@ -15,19 +15,20 @@ An example could be like this :
         "weight_decay": 0.0005
     },
 
+    "clustering_params" : {
+        "num_parts" : 10
+    },
+
     "model" : [
         {
             "layer_id" : 1,
-            "name" : "GATConv",
-            "heads" : 8,
-            "out_channels" : 8
+            "name" : "ClusterGCNConv",
+            "out_channels" : 64
         },
 
         {
             "layer_id" : 2,
-            "name" : "GATConv",
-            "heads" : 1,
-            "concat" : false,
+            "name" : "ClusterGCNConv",
             "in_channels" : 64
         }
     ],
@@ -48,4 +49,4 @@ python main.py \
         --tf_log=./tf_log \
 ```
 
-This would start to train the GAT model using the Planetoid dataset
+This would start to train the ClusterGCN model with 10 graph clusters using the Planetoid dataset. For other algorithm or if you don't want to perform clustering, simply set the num_parts into 1
