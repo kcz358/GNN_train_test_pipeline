@@ -5,6 +5,7 @@ import json
 
 import torch
 import torch_geometric.datasets as geo_datasets
+from torch_geometric.data import Data, ClusterData
 from torch.utils.tensorboard import SummaryWriter
 
 from model import GNNAutoModel
@@ -63,6 +64,8 @@ if __name__ == "__main__":
     #Popping out the dataset key and preserve other keys
     dataset.pop("dataset_name")
     
+    clustering_params = config['clustering_params']
+    
     root = parsed_args.root
     out_dir = parsed_args.out_dir
     tf_log = parsed_args.tf_log
@@ -75,6 +78,7 @@ if __name__ == "__main__":
     print("Output Directory : ", out_dir)
     print("tensorboard logging Directory : ", tf_log)
     print("Additional Dataset Parameters : ", additional_dataset_parameters)
+    print("Clustering parameters : ", clustering_params)
     
 
     
@@ -96,9 +100,15 @@ if __name__ == "__main__":
         dataset_class = load_dataset(dataset_name)
         dataset_class = partial(dataset_class, **additional_dataset_parameters)
         dataset = dataset_class(root = root)
-        dataset.x = dataset.x.to(device)
+        data = Data(x=dataset.x, edge_index=dataset.edge_index, y=dataset.y)
+        data.train_mask = dataset.train_mask
+        data.val_mask = dataset.val_mask
+        data.test_mask = dataset.test_mask
+        data_cluster = ClusterData(data, **clustering_params)
+        
+        '''dataset.x = dataset.x.to(device)
         dataset.edge_index = dataset.edge_index.to(device)
-        dataset.y = dataset.y.to(device)
+        dataset.y = dataset.y.to(device)'''
     except:
         raise RuntimeError("Oops, Looks like the dataset isn't in the torchgeometric dataset class or you enter the wrong config")
     
@@ -120,20 +130,35 @@ if __name__ == "__main__":
 
     writer = SummaryWriter(log_dir=tf_log + "/{}_{}_{}".format(model_name, dataset_name, formatted_time))
     for epoch in range(1, epochs + 1):
-        loss = train(model=model,
-                     optimizer=optimizer,
-                     data=dataset,
-                     criterion=criterion)
-        val_acc = test(model=model,
-                       data=dataset,
-                       mask=dataset.val_mask)
-        test_acc = test(model=model,
-                       data=dataset,
-                       mask=dataset.test_mask)
-        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
-        writer.add_scalar("Loss/train", loss, epoch)
-        writer.add_scalar("Accuracy/val", val_acc, epoch)
-        writer.add_scalar("Accuracy/test", test_acc, epoch)
+        epoch_loss = 0
+        epoch_val_acc = 0
+        epoch_test_acc = 0
+        for num_cluster in range(len(data_cluster)):
+            cluster = data_cluster[num_cluster]
+            cluster.x = cluster.x.to(device)
+            cluster.edge_index = cluster.edge_index.to(device)
+            cluster.y = cluster.y.to(device)
+            loss = train(model=model,
+                        optimizer=optimizer,
+                        data=cluster,
+                        criterion=criterion)
+            val_acc = test(model=model,
+                        data=cluster,
+                        mask=cluster.val_mask)
+            test_acc = test(model=model,
+                        data=cluster,
+                        mask=cluster.test_mask)
+            
+            epoch_loss += loss
+            epoch_val_acc += val_acc
+            epoch_test_acc += test_acc
+        epoch_loss = epoch_loss / len(data_cluster)
+        epoch_val_acc = epoch_val_acc / len(data_cluster)
+        epoch_test_acc = epoch_test_acc / len(data_cluster)
+        print(f'Epoch: {epoch:03d}, Loss: {epoch_loss:.4f}, Val Acc: {epoch_val_acc:.4f}, Test Acc: {epoch_test_acc:.4f}')
+        writer.add_scalar("Loss/train", epoch_loss, epoch)
+        writer.add_scalar("Accuracy/val", epoch_val_acc, epoch)
+        writer.add_scalar("Accuracy/test", epoch_test_acc, epoch)
         if epoch % 10 == 0:
             state_dict = {
                 'state_dict' : model.state_dict(),
