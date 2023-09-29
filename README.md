@@ -12,7 +12,8 @@ An example could be like this :
     "training": {
         "learning_rate": 0.001,
         "epochs": 50,
-        "weight_decay": 0.0005
+        "weight_decay": 0.0005,
+        "label_propagation": true
     },
 
     "clustering_params" : {
@@ -35,7 +36,9 @@ An example could be like this :
 
     "dataset" : {
         "dataset_name" : "Planetoid",
-        "name" : "Cora"
+        "name" : "Cora",
+        "multilabel":false,
+        "multigraph":false
     }
 }
 ```
@@ -49,4 +52,6 @@ python main.py \
         --tf_log=./tf_log \
 ```
 
-This would start to train the ClusterGCN model with 10 graph clusters using the Planetoid dataset. For other algorithm or if you don't want to perform clustering, simply set the num_parts into 1
+This would start to train the ClusterGCN model with 10 graph clusters using the Planetoid dataset along with the label propagation. For other algorithm or if you don't want to perform clustering, simply set the num_parts into 1.
+
+When you pass in the dataset config, make sure you pass in the correct multilabel and multigraph. For example, Planetoid is a not a multilabel and not a multigraph dataset, so here should be false. Another example is PPI, since it is both a multilabel and multigraph dataset, we should pass in true for both of these parameters.
