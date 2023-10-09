@@ -204,6 +204,8 @@ if __name__ == "__main__":
     LPA = "LPA" if label_propagation else ""
 
     writer = SummaryWriter(log_dir=tf_log + "/{}{}_{}_{}".format(model_name, LPA ,dataset_name, formatted_time))
+    test_accuracies = []
+    val_accuracies = []
     for epoch in range(1, epochs + 1):
         epoch_loss = 0
         epoch_val_acc = 0
@@ -247,6 +249,8 @@ if __name__ == "__main__":
         epoch_loss = epoch_loss / len(data_cluster)
         epoch_val_acc = epoch_val_acc / len(data_cluster)
         epoch_test_acc = epoch_test_acc / len(data_cluster)
+        val_accuracies.append(epoch_val_acc)
+        test_accuracies.append(epoch_test_acc)
         print(f'Epoch: {epoch:03d}, Loss: {epoch_loss:.4f}, Val Acc: {epoch_val_acc:.4f}, Test Acc: {epoch_test_acc:.4f}')
         writer.add_scalar("Loss/train", epoch_loss, epoch)
         writer.add_scalar("Accuracy/val", epoch_val_acc, epoch)
@@ -260,3 +264,5 @@ if __name__ == "__main__":
             }
             torch.save(state_dict, out_dir + "/{}_epoch".format(epoch))
     writer.close()
+    print(f"Best Epoch : {test_accuracies.index(max(test_accuracies)) + 1}")
+    print(f"Testing Accuracies result : {max(test_accuracies)}")
