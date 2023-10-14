@@ -70,7 +70,7 @@ def dataset_to_device(dataset, device):
 def lpa_step(y):
     #LPA for training 
     if not multigraph:
-        lpa = F.one_hot(y)
+        lpa = F.one_hot(y, num_classes = num_classes)
         lpa = torch.tensor(lpa, dtype=torch.float32).to(device)
     else:
         lpa = torch.tensor(y, dtype=torch.float32)
