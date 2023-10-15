@@ -6,7 +6,7 @@ A simple GNN training and testing node classification pipeline using torchgeomet
 # Usage
 
 ## Prepare environment
-
+For the required packages, make sure you installed pytorch and tensorboard. You can then followed the instructions to install torch_geometric and the other packages from [this website](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html)
 
 
 To start training the model, you should first prepare you json config file.
