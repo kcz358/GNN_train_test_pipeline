@@ -1,7 +1,13 @@
 # GNN_train_test_pipeline
-A simple GNN training and testing node classification pipeline using torchgeometric as tools
+NTU SC4020 CZ/CE 4032 Data Mining and Analytic project 1 repo
+
+A simple GNN training and testing node classification pipeline using torchgeometric as tools. Current testing pipeline only ensures that you can run Cora, PubMed, Citesteer under Planetoid and PPI datasets. For other datasets, modification needs to be done on the code.
 
 # Usage
+
+## Prepare environment
+
+
 
 To start training the model, you should first prepare you json config file.
 
